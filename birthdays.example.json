@@ -1,0 +1,7 @@
+{
+  "friends": [
+    { "name": "Alice", "steam": "76561198000000001", "birthday": "11-12" },
+    { "name": "Bob", "steam": "https://steamcommunity.com/id/bobplaysgames", "birthday": "1994-12-03" },
+    { "name": "Carol", "steam": "carolvanity", "birthday": "" }
+  ]
+}

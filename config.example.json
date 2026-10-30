@@ -1,0 +1,23 @@
+{
+  "steam_api_key": "YOUR_STEAM_WEB_API_KEY",
+  "my_steam_id": "your_vanity_name_or_steamid64",
+  "birthdays_file": "birthdays.json",
+  "state_file": ".sent_deals.json",
+  "country_code": "US",
+  "days_ahead": 30,
+  "min_discount": 1,
+  "max_price": null,
+  "notify": {
+    "desktop": true,
+    "discord_webhook": "",
+    "ntfy_topic": "",
+    "email": {
+      "host": "",
+      "port": 587,
+      "username": "",
+      "password": "",
+      "from": "",
+      "to": ""
+    }
+  }
+}

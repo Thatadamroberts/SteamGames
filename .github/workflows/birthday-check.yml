@@ -1,0 +1,58 @@
+# Optional: run the check every day on GitHub's servers and notify via Discord/ntfy/email.
+# Set these repository secrets (Settings > Secrets and variables > Actions):
+#   STEAM_API_KEY      - required
+#   BIRTHDAYS_JSON     - required; the full contents of your birthdays.json
+#   DISCORD_WEBHOOK_URL / NTFY_TOPIC / SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_TO
+#   STEAM_COUNTRY      - optional, e.g. GB (defaults to US)
+name: Birthday gift check
+
+on:
+  schedule:
+    - cron: "17 15 * * *"   # daily at 15:17 UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+      BIRTHDAYS_JSON: ${{ secrets.BIRTHDAYS_JSON }}
+      STEAM_COUNTRY: ${{ secrets.STEAM_COUNTRY }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Skip if not configured
+        id: guard
+        run: |
+          if [ -z "$BIRTHDAYS_JSON" ]; then
+            echo "BIRTHDAYS_JSON secret not set; skipping."; echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      # Remember already-sent deals between runs so you aren't pinged about the same game daily.
+      - uses: actions/cache/restore@v4
+        if: steps.guard.outputs.run == 'true'
+        with:
+          path: .sent_deals.json
+          key: sent-deals-${{ github.run_id }}
+          restore-keys: sent-deals-
+      - name: Check birthdays and wishlists
+        if: steps.guard.outputs.run == 'true'
+        run: |
+          printf '%s' "$BIRTHDAYS_JSON" > birthdays.json
+          echo '{"notify": {"desktop": false}}' > config.json
+          python -m steam_gift_finder check
+      - uses: actions/cache/save@v4
+        if: always() && steps.guard.outputs.run == 'true'
+        with:
+          path: .sent_deals.json
+          key: sent-deals-${{ github.run_id }}
